@@ -21,7 +21,13 @@ class FlowValidator {
         "DelayAction",
         "SetVariableAction",
         "GetVariableBlock",
-        "BranchSelector"
+        "BranchSelector",
+        // Sensors
+        "Pedometer",
+        "Camera",
+        "Location",
+        "ActivityRecognition",
+        "SetAlarmAction"
     )
 
     fun validate(response: FlowGraphResponse) {

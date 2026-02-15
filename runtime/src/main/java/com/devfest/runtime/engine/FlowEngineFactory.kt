@@ -26,7 +26,9 @@ object FlowEngineFactory {
             // Sensor Blocks
             BlockType.PEDOMETER to StepCountHandler(context),
             BlockType.LOCATION to GetLocationHandler(context),
+            BlockType.LOCATION to GetLocationHandler(context),
             BlockType.CAMERA to CameraCaptureHandler(context, ProcessLifecycleOwner.get()),
+            BlockType.SET_ALARM_ACTION to SetAlarmHandler(context),
 
             BlockType.DELAY_ACTION to DelayHandler(),
             BlockType.SET_VARIABLE_ACTION to VariableHandler(),

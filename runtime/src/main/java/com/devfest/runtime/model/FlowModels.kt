@@ -61,6 +61,8 @@ enum class BlockType(val category: BlockCategory) {
     TOGGLE_WIFI_ACTION(BlockCategory.ACTION),
     @SerialName("PlaySoundAction")
     PLAY_SOUND_ACTION(BlockCategory.ACTION),
+    @SerialName("SetAlarmAction")
+    SET_ALARM_ACTION(BlockCategory.ACTION),
 
     @SerialName("Pedometer")
     PEDOMETER(BlockCategory.CONDITION),

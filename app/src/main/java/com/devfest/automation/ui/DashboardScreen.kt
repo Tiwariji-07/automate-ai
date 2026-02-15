@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.WbTwilight
@@ -277,7 +278,9 @@ fun ActiveFlowsList(viewModel: com.devfest.automation.viewmodel.AgentViewModel) 
                     iconBg = if (isActive) Color(0xFFE0E7FF) else Color.LightGray,
                     iconTint = if (isActive) Color(0xFF6366F1) else Color.DarkGray,
                     isChecked = isActive,
-                    onToggle = { checked -> viewModel.toggleFlow(graph.id, checked) }
+                    onToggle = { checked -> viewModel.toggleFlow(graph.id, checked) },
+                    showRunButton = graph.blocks.any { it.type == com.devfest.runtime.model.BlockType.MANUAL_QUICK_TRIGGER },
+                    onRun = { viewModel.runFlow(graph) }
                 )
             }
         }
@@ -294,7 +297,9 @@ fun FlowStatusCard(
     iconBg: Color,
     iconTint: Color,
     isChecked: Boolean,
-    onToggle: (Boolean) -> Unit
+    onToggle: (Boolean) -> Unit,
+    showRunButton: Boolean = false,
+    onRun: () -> Unit = {}
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -339,16 +344,30 @@ fun FlowStatusCard(
                         }
                     }
                 }
-                Switch(
-                    checked = isChecked,
-                    onCheckedChange = onToggle,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = ElectricBlue,
-                        uncheckedThumbColor = Color.LightGray,
-                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (showRunButton) {
+                        androidx.compose.material3.IconButton(
+                            onClick = onRun,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.PlayArrow,
+                                contentDescription = "Run Now",
+                                tint = ElectricBlue
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = isChecked,
+                        onCheckedChange = onToggle,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = ElectricBlue,
+                            uncheckedThumbColor = Color.LightGray,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
                     )
-                )
+                }
             }
             Spacer(modifier = Modifier.height(12.dp))
             Box(

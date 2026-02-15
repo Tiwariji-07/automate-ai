@@ -128,37 +128,79 @@ class OpenAiGateway(
     }
 
     private fun parseGraph(content: String): com.devfest.server.model.FlowGraph {
-        val jsonElement = JsonParser.evaluate(content)
-        val graph = jsonElement.jsonObject["graph"] ?: jsonElement
-        return json.decodeFromJsonElement(com.devfest.server.model.FlowGraph.serializer(), graph)
+        val cleaned = cleanJson(content)
+        val jsonElement = json.parseToJsonElement(cleaned)
+        
+        // Handle case where LLM wraps it in { "graph": ... } or returns direct graph
+        val graphElement = if (jsonElement.jsonObject.containsKey("graph")) {
+             jsonElement.jsonObject["graph"]!!
+        } else {
+             jsonElement
+        }
+        
+        return json.decodeFromJsonElement(com.devfest.server.model.FlowGraph.serializer(), graphElement)
+    }
+
+    private fun cleanJson(content: String): String {
+        return content.trim()
+            .removePrefix("```json")
+            .removePrefix("```")
+            .removeSuffix("```")
+            .trim()
     }
 
     private fun buildPrompt(request: IntentRequest): String = buildString {
         appendLine("User intent: ${request.intentText}")
         appendLine("Capabilities available: ${request.context.capabilities}")
-        appendLine("Return a JSON object with fields flow_id(optional), graph, explanation, risk_flags.")
-        appendLine("graph must match this Kotlin schema: ${com.devfest.server.model.FlowGraph.serializer().descriptor.serialName}")
+        appendLine("RETURN JSON ONLY. The JSON must match this EXACT structure:")
+        appendLine("""
+        {
+          "graph": {
+            "id": "unique_guid",
+            "title": "Short Title",
+            "blocks": [
+              { "id": "b1", "type": "Type", "params": { "k": "v" } }
+            ],
+            "edges": [
+              { "from": "b1", "to": "b2", "condition": "label" }
+            ],
+            "explanation": "One sentence summary",
+            "risk_flags": []
+          },
+          "explanation": "Same summary as above",
+          "risk_flags": []
+        }
+        """.trimIndent())
+
+        appendLine("IMPORTANT:")
+        appendLine("1. Use 'blocks', NOT 'nodes'.")
+        appendLine("2. 'graph' object MUST contain 'id', 'title', 'blocks', 'edges', 'explanation'.")
+        appendLine("3. Use the exact block types listed below.")
+        appendLine("4. EVERY flow MUST start with a Trigger. For immediate commands, use 'ManualQuickTrigger' and link it to the first action.")
         
-        appendLine("AVAILABLE BLOCKS (Use these types exactly):")
+        appendLine("AVAILABLE BLOCKS:")
         appendLine("1. SENSORS:")
         appendLine("   - Pedometer (params: threshold='10')")
         appendLine("   - Camera (params: lens='front'|'back')")
         appendLine("   - Location (params: accuracy='high'|'balanced'|'low')")
+        appendLine("   - ActivityRecognition (params: type='STILL'|'WALKING'|'RUNNING', confidence='50')")
         appendLine("2. TRIGGERS:")
         appendLine("   - LocationExitTrigger (params: geofence, radiusMeters)")
-        appendLine("   - TimeScheduleTrigger (params: time, days)")
+        appendLine("   - TimeScheduleTrigger (params: time='HH:mm', days='[\"Mon\"]')")
         appendLine("   - ManualQuickTrigger")
         appendLine("3. ACTIONS & CONDITIONS:")
-        appendLine("   - TimeWindowCondition (params: start, end)")
-        appendLine("   - BatteryGuardCondition (params: minPercent)")
+        appendLine("   - TimeWindowCondition (params: start='HH:mm', end='HH:mm')")
+        appendLine("   - BatteryGuardCondition (params: minPercent='15')")
         appendLine("   - SendNotificationAction (params: title, message)")
         appendLine("   - SendSMSAction (params: phone, body)")
         appendLine("   - HttpWebhookAction (params: url, method, body)")
         appendLine("   - ToggleWifiAction (params: enable='true'|'false')")
-        appendLine("   - PlaySoundAction (params: uri='content://...')")
-        appendLine("   - DelayAction (params: millis)")
+        appendLine("   - ToggleWifiAction (params: enable='true'|'false')")
+        appendLine("   - PlaySoundAction (params: uri='content://media/internal/audio/media/1')")
+        appendLine("   - SetAlarmAction (params: hour='7', minute='30', message='Wake Up', skipUi='true')")
+        appendLine("   - DelayAction (params: millis='1000')")
         
-        appendLine("Edges should reference block ids and include condition labels.")
+        appendLine("Edges should reference block ids. Condition is optional (empty string if none).")
     }
 
     companion object {

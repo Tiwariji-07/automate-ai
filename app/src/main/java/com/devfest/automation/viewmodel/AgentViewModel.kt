@@ -108,6 +108,12 @@ class AgentViewModel(
         _uiState.value = _uiState.value.copy(
             activeFlowIds = _uiState.value.activeFlowIds + flowId
         )
+
+        // Check if it's a Manual Trigger flow and execute immediately
+        val flow = _uiState.value.flowGraphs[flowId]
+        if (flow != null && flow.blocks.any { it.type == com.devfest.runtime.model.BlockType.MANUAL_QUICK_TRIGGER }) {
+            runFlow(flow)
+        }
     }
 
     fun toggleFlow(flowId: String, active: Boolean) {
