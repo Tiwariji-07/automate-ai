@@ -36,6 +36,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +51,7 @@ import com.devfest.automation.ui.theme.TriggerBlue
 
 @Composable
 fun DashboardScreen(
+    viewModel: com.devfest.automation.viewmodel.AgentViewModel,
     onNavigateToChat: () -> Unit
 ) {
     Box(
@@ -69,13 +71,13 @@ fun DashboardScreen(
             ) {
                 // Stats Widget
                 item {
-                    StatsSection()
+                    StatsSection(viewModel)
                 }
 
                 // Active Flows
                 item {
-                    SectionHeader(title = "Active Flows", action = "View All")
-                    ActiveFlowsList()
+                    SectionHeader(title = "Your Flows", action = "View All") // Renamed title
+                    ActiveFlowsList(viewModel)
                 }
 
                 // Recent Activity
@@ -140,7 +142,12 @@ fun DashboardHeader() {
 }
 
 @Composable
-fun StatsSection() {
+fun StatsSection(viewModel: com.devfest.automation.viewmodel.AgentViewModel) {
+    val uiState = viewModel.uiState.collectAsState().value
+    val activeCount = uiState.activeFlowIds.size
+    val totalFlows = uiState.flowGraphs.size
+    val successRate = if (totalFlows > 0) "100%" else "-" // Mock success rate for now
+
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -149,8 +156,8 @@ fun StatsSection() {
         item {
             StatCard(
                 label = "Active",
-                value = "12",
-                subtext = "2 new",
+                value = "$activeCount",
+                subtext = "$totalFlows created",
                 subtextColor = ActionGreen,
                 icon = Icons.Filled.ArrowUpward
             )
@@ -158,7 +165,7 @@ fun StatsSection() {
         item {
             StatCard(
                 label = "Savings",
-                value = "4.5h",
+                value = "${activeCount * 0.5}h", // Mock calc
                 subtext = "This week",
                 subtextColor = MaterialTheme.colorScheme.primary
             )
@@ -166,7 +173,7 @@ fun StatsSection() {
         item {
             StatCard(
                 label = "Success",
-                value = "98%",
+                value = successRate,
                 subtext = "Stable",
                 subtextColor = ActionGreen
             )
@@ -243,29 +250,37 @@ fun SectionHeader(title: String, action: String? = null) {
 }
 
 @Composable
-fun ActiveFlowsList() {
+fun ActiveFlowsList(viewModel: com.devfest.automation.viewmodel.AgentViewModel) {
+    val uiState = viewModel.uiState.collectAsState().value
+    
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        FlowStatusCard(
-            title = "Climate Control",
-            status = "Running",
-            statusColor = ActionGreen,
-            icon = Icons.Filled.AcUnit,
-            description = "Currently maintaining 22°C. Humidity spiked > 60%.",
-            iconBg = Color(0xFFE0E7FF),
-            iconTint = Color(0xFF6366F1)
-        )
-        FlowStatusCard(
-            title = "Morning Briefing",
-            status = "Idle",
-            statusColor = Color.Gray,
-            icon = Icons.Filled.WbTwilight,
-            description = "Waiting for 7:00 AM trigger.",
-            iconBg = Color(0xFFFFEDD5),
-            iconTint = Color(0xFFF97316)
-        )
+        if (uiState.flowGraphs.isEmpty()) {
+            // Empty state
+            Text(
+                text = "No flows created yet. Chat with the agent to start!",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(16.dp)
+            )
+        } else {
+            uiState.flowGraphs.values.reversed().forEach { graph -> // Show newest first
+                val isActive = uiState.activeFlowIds.contains(graph.id)
+                FlowStatusCard(
+                    title = graph.title,
+                    status = if (isActive) "Active" else "Inactive",
+                    statusColor = if (isActive) ActionGreen else Color.Gray,
+                    icon = Icons.Filled.Bolt,
+                    description = graph.explanation,
+                    iconBg = if (isActive) Color(0xFFE0E7FF) else Color.LightGray,
+                    iconTint = if (isActive) Color(0xFF6366F1) else Color.DarkGray,
+                    isChecked = isActive,
+                    onToggle = { checked -> viewModel.toggleFlow(graph.id, checked) }
+                )
+            }
+        }
     }
 }
 
@@ -277,7 +292,9 @@ fun FlowStatusCard(
     icon: ImageVector,
     description: String,
     iconBg: Color,
-    iconTint: Color
+    iconTint: Color,
+    isChecked: Boolean,
+    onToggle: (Boolean) -> Unit
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -323,11 +340,13 @@ fun FlowStatusCard(
                     }
                 }
                 Switch(
-                    checked = true,
-                    onCheckedChange = {},
+                    checked = isChecked,
+                    onCheckedChange = onToggle,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = ElectricBlue
+                        checkedTrackColor = ElectricBlue,
+                        uncheckedThumbColor = Color.LightGray,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 )
             }

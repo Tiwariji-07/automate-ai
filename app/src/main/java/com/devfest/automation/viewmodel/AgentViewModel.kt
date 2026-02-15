@@ -103,6 +103,23 @@ class AgentViewModel(
         }
     }
 
+    fun activateFlow(flowId: String) {
+        // Mark flow as active
+        _uiState.value = _uiState.value.copy(
+            activeFlowIds = _uiState.value.activeFlowIds + flowId
+        )
+    }
+
+    fun toggleFlow(flowId: String, active: Boolean) {
+        val currentActive = _uiState.value.activeFlowIds
+        val newActive = if (active) {
+            currentActive + flowId
+        } else {
+            currentActive - flowId
+        }
+        _uiState.value = _uiState.value.copy(activeFlowIds = newActive)
+    }
+
     private fun demoMetadata(): Map<String, String> {
         val now = OffsetDateTime.now().toString()
         return mapOf(
@@ -119,5 +136,6 @@ data class AgentUiState(
     val statusMessage: String = "Ready",
     val flowGraphs: Map<String, FlowGraph> = emptyMap(),
     val executingFlowId: String? = null,
-    val execution: List<FlowStepResult> = emptyList()
+    val execution: List<FlowStepResult> = emptyList(),
+    val activeFlowIds: Set<String> = emptySet()
 )

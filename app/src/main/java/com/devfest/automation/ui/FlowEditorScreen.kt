@@ -94,8 +94,8 @@ fun FlowEditorScreen(
                 Button(
                     onClick = {
                         graph?.let {
-                            viewModel.runFlow(it)
-                            onDeploy() // Could go to dashboard or stay here showing 'Running'
+                            viewModel.activateFlow(it.id)
+                            onDeploy() 
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
