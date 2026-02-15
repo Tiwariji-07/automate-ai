@@ -19,7 +19,7 @@ android {
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
-            buildConfigField("String", "AGENT_BASE_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("String", "AGENT_BASE_URL", "\"http://127.0.0.1:8080/\"")
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -72,4 +72,6 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("com.google.android.material:material:1.11.0")
+
+    implementation("androidx.room:room-runtime:2.6.1")
 }

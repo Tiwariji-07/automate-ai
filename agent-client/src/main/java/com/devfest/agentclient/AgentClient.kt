@@ -48,9 +48,13 @@ class AgentClient(
                 .addInterceptor { chain ->
                     val request = chain.request()
                     val sessionToken = SessionTokenStore(context).getToken()
-                    val newRequest = request.newBuilder()
-                        .addHeader("Authorization", "Bearer $sessionToken")
-                        .build()
+                    val newRequest = if (sessionToken.isNotEmpty() && sessionToken != "demo-session-token") {
+                         request.newBuilder()
+                            .addHeader("Authorization", "Bearer $sessionToken")
+                            .build()
+                    } else {
+                        request
+                    }
                     chain.proceed(newRequest)
                 }
                 .build()
