@@ -7,8 +7,10 @@ import com.devfest.server.validation.FlowValidator
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -71,7 +73,7 @@ private fun Application.installAuthentication() {
         jwt {
             verifier(FakeJwtProvider.verifier)
             validate { credential ->
-                if (credential.payload.getClaim("sub").asString().isNullOrEmpty()) null else credential
+                if (credential.payload.getClaim("sub").asString().isNullOrEmpty()) null else JWTPrincipal(credential.payload)
             }
         }
     }

@@ -10,7 +10,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.UUID
-import kotlin.time.Duration.Companion.seconds
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -43,7 +43,7 @@ class AgentClient(
                 level = HttpLoggingInterceptor.Level.BASIC
             }
             val client = OkHttpClient.Builder()
-                .callTimeout(30.seconds)
+                .callTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor(logging)
                 .addInterceptor { chain ->
                     val request = chain.request()

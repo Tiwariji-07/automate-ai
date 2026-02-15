@@ -8,9 +8,6 @@ application {
     mainClass.set("com.devfest.server.ServerKt")
 }
 
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation("io.ktor:ktor-server-core:2.3.8")

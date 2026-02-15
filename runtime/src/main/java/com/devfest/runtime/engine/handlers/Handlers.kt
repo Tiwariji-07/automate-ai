@@ -207,18 +207,20 @@ class VariableHandler : FlowBlockHandler {
         block: FlowBlock,
         input: FlowExecutionInput,
         state: FlowExecutionState
-    ): FlowStepResult = when (block.type) {
-        BlockType.SET_VARIABLE_ACTION -> {
-            val key = block.params["key"] ?: return FlowStepResult(block.id, FlowStepStatus.FAILED, "Missing key")
-            state.variables[key] = block.params["value"].orEmpty()
-            FlowStepResult(block.id, FlowStepStatus.SUCCESS, "Set $key")
+    ): FlowStepResult {
+        return when (block.type) {
+            BlockType.SET_VARIABLE_ACTION -> {
+                val key = block.params["key"] ?: return FlowStepResult(block.id, FlowStepStatus.FAILED, "Missing key")
+                state.variables[key] = block.params["value"].orEmpty()
+                FlowStepResult(block.id, FlowStepStatus.SUCCESS, "Set $key")
+            }
+            BlockType.GET_VARIABLE_BLOCK -> {
+                val key = block.params["key"] ?: return FlowStepResult(block.id, FlowStepStatus.FAILED, "Missing key")
+                val value = state.variables[key]
+                FlowStepResult(block.id, FlowStepStatus.SUCCESS, "Value for $key = ${value ?: "null"}")
+            }
+            else -> FlowStepResult(block.id, FlowStepStatus.SKIPPED, "Unsupported variable op")
         }
-        BlockType.GET_VARIABLE_BLOCK -> {
-            val key = block.params["key"] ?: return FlowStepResult(block.id, FlowStepStatus.FAILED, "Missing key")
-            val value = state.variables[key]
-            FlowStepResult(block.id, FlowStepStatus.SUCCESS, "Value for $key = ${value ?: "null"}")
-        }
-        else -> FlowStepResult(block.id, FlowStepStatus.SKIPPED, "Unsupported variable op")
     }
 }
 
