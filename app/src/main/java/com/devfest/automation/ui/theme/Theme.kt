@@ -7,13 +7,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF6750A4),
-    onPrimary = Color.White
+    primary = ElectricBlue,
+    onPrimary = Color.White,
+    background = BackgroundLight,
+    surface = Color.White,
+    onSurface = TextPrimaryLight,
+    surfaceVariant = Color(0xFFF1F5F9), // Slate 100
+    onSurfaceVariant = TextSecondaryLight
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFCFBCFF),
-    onPrimary = Color(0xFF381E72)
+    primary = ElectricBlue, // Keep electric blue for brand, maybe slightly lighter?
+    onPrimary = Color.White,
+    background = BackgroundDark,
+    surface = SurfaceDark,
+    onSurface = TextPrimaryDark,
+    surfaceVariant = Color(0xFF1E293B), // Slate 800
+    onSurfaceVariant = TextSecondaryDark
 )
 
 @Composable

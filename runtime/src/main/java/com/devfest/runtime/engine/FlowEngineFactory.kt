@@ -1,6 +1,8 @@
 package com.devfest.runtime.engine
 
 import android.content.Context
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.devfest.runtime.engine.blocks.*
 import com.devfest.runtime.engine.handlers.*
 import com.devfest.runtime.model.BlockType
 
@@ -20,6 +22,11 @@ object FlowEngineFactory {
             BlockType.HTTP_WEBHOOK_ACTION to HttpWebhookHandler(),
             BlockType.TOGGLE_WIFI_ACTION to ToggleWifiHandler(context),
             BlockType.PLAY_SOUND_ACTION to PlaySoundHandler(context),
+            
+            // Sensor Blocks
+            BlockType.PEDOMETER to StepCountHandler(context),
+            BlockType.LOCATION to GetLocationHandler(context),
+            BlockType.CAMERA to CameraCaptureHandler(context, ProcessLifecycleOwner.get()),
 
             BlockType.DELAY_ACTION to DelayHandler(),
             BlockType.SET_VARIABLE_ACTION to VariableHandler(),

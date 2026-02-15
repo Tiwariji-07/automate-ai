@@ -62,6 +62,13 @@ enum class BlockType(val category: BlockCategory) {
     @SerialName("PlaySoundAction")
     PLAY_SOUND_ACTION(BlockCategory.ACTION),
 
+    @SerialName("Pedometer")
+    PEDOMETER(BlockCategory.CONDITION),
+    @SerialName("Camera")
+    CAMERA(BlockCategory.ACTION),
+    @SerialName("Location")
+    LOCATION(BlockCategory.ACTION),
+
     @SerialName("DelayAction")
     DELAY_ACTION(BlockCategory.UTILITY),
     @SerialName("SetVariableAction")

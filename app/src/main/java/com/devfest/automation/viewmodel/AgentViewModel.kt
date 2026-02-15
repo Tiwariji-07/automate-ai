@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.devfest.automation.di.AppDependencies
+import com.devfest.automation.ui.model.ChatMessage
+import com.devfest.automation.ui.model.Role
 import com.devfest.data.repository.FlowRepository
 import com.devfest.runtime.engine.FlowEngine
 import com.devfest.runtime.engine.FlowEngineFactory
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class AgentViewModel(
     application: Application
@@ -33,35 +36,70 @@ class AgentViewModel(
     private val _uiState = MutableStateFlow(AgentUiState())
     val uiState: StateFlow<AgentUiState> = _uiState
 
-    fun triggerDemoFlow() {
+    fun sendMessage(text: String) {
+        if (text.isBlank()) return
+
+        val userMessage = ChatMessage(role = Role.USER, text = text)
+        // Add user message immediately
+        _uiState.value = _uiState.value.copy(
+            messages = _uiState.value.messages + userMessage,
+            isLoading = true
+        )
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                statusMessage = "Synthesizing flow...",
-                flowGraph = null,
-                execution = emptyList()
-            )
             try {
+                // Request flow from agent
                 val graph = repository.requestFlow(
-                    intentText = "When I leave work after 5pm, turn on AC and notify partner.",
+                    intentText = text,
                     context = intentContext,
                     sessionToken = "demo-session-token"
                 )
-                val execution = engine.execute(
-                    graph,
-                    FlowExecutionInput(
-                        metadata = demoMetadata()
-                    )
+
+                // Add agent response with flow
+                val agentMessage = ChatMessage(
+                    role = Role.AGENT,
+                    text = "Here is the automation flow I created for you based on: \"$text\"",
+                    flowId = graph.id
                 )
+                
                 _uiState.value = _uiState.value.copy(
-                    statusMessage = "Flow ready: ${graph.title}",
-                    flowGraph = graph,
-                    execution = execution.steps
+                    messages = _uiState.value.messages + agentMessage,
+                    flowGraphs = _uiState.value.flowGraphs + (graph.id to graph),
+                    isLoading = false
                 )
             } catch (ex: Exception) {
+                val errorMessage = ChatMessage(
+                    role = Role.AGENT,
+                    text = "Sorry, I encountered an error: ${ex.localizedMessage ?: "Unknown error"}"
+                )
                 _uiState.value = _uiState.value.copy(
-                    statusMessage = "Failed to build flow: ${ex.localizedMessage}"
+                    messages = _uiState.value.messages + errorMessage,
+                    isLoading = false
                 )
             }
+        }
+    }
+
+    fun runFlow(graph: FlowGraph) {
+        viewModelScope.launch {
+            // Reset execution state
+            _uiState.value = _uiState.value.copy(
+                execution = emptyList(),
+                executingFlowId = graph.id,
+                statusMessage = "Running flow: ${graph.title}..."
+            )
+            
+            val execution = engine.execute(
+                graph,
+                FlowExecutionInput(
+                    metadata = demoMetadata()
+                )
+            )
+            
+            _uiState.value = _uiState.value.copy(
+                statusMessage = "Execution complete.",
+                execution = execution.steps
+            )
         }
     }
 
@@ -76,7 +114,10 @@ class AgentViewModel(
 }
 
 data class AgentUiState(
-    val statusMessage: String = "Describe an automation to get started.",
-    val flowGraph: FlowGraph? = null,
+    val messages: List<ChatMessage> = emptyList(),
+    val isLoading: Boolean = false,
+    val statusMessage: String = "Ready",
+    val flowGraphs: Map<String, FlowGraph> = emptyMap(),
+    val executingFlowId: String? = null,
     val execution: List<FlowStepResult> = emptyList()
 )

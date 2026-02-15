@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agent Intent Capture</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1337ec",
+                        "primary-dark": "#0d25a0",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101322",
+                        "surface-dark": "#1c2136",
+                        "trigger": "#38bdf8", // Sky blue for triggers
+                        "action": "#34d399",  // Emerald for actions
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(19, 55, 236, 0.5)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for horizontal scrolling areas */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-display min-h-screen flex flex-col antialiased selection:bg-primary selection:text-white overflow-hidden relative">
+<!-- Header -->
+<header class="flex-none px-6 pt-12 pb-4 flex items-center justify-between z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 border-b border-slate-200 dark:border-slate-800/50">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-glow">
+<span class="material-icons text-white text-lg">auto_awesome</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Agent</h1>
+</div>
+<button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-icons text-slate-500 dark:text-slate-400">history</span>
+</button>
+</header>
+<!-- Main Chat Area -->
+<main class="flex-1 overflow-y-auto p-4 space-y-6 pb-32">
+<!-- Timestamp -->
+<div class="flex justify-center py-2">
+<span class="text-xs text-slate-400 dark:text-slate-500 font-medium">Today, 9:41 AM</span>
+</div>
+<!-- AI Greeting (Left) -->
+<div class="flex items-start gap-3 max-w-[85%]">
+<div class="w-8 h-8 rounded-full bg-surface-dark border border-slate-700 flex items-center justify-center flex-none">
+<span class="material-icons text-primary text-sm">smart_toy</span>
+</div>
+<div class="bg-white dark:bg-surface-dark p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 dark:border-slate-800">
+<p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                    Hello! I'm ready to help you automate your tasks. What would you like to build today?
+                </p>
+</div>
+</div>
+<!-- User Message (Right) -->
+<div class="flex items-end justify-end gap-3 w-full">
+<div class="bg-primary text-white p-4 rounded-2xl rounded-br-none shadow-lg shadow-primary/20 max-w-[85%]">
+<p class="text-sm leading-relaxed">
+                    When I leave work, text my partner and turn on the AC.
+                </p>
+</div>
+</div>
+<!-- AI Processing/Response (Left) -->
+<div class="flex items-start gap-3 max-w-full">
+<div class="w-8 h-8 rounded-full bg-surface-dark border border-slate-700 flex items-center justify-center flex-none mt-1">
+<span class="material-icons text-primary text-sm">smart_toy</span>
+</div>
+<div class="flex flex-col gap-2 w-full max-w-[90%] sm:max-w-[80%]">
+<!-- Text Response -->
+<div class="bg-white dark:bg-surface-dark p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 dark:border-slate-800">
+<p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                        I've analyzed your request. It looks like you want a location-based automation with two distinct actions. Here is the proposed flow:
+                    </p>
+</div>
+<!-- Structured Proposal Card -->
+<div class="bg-slate-50 dark:bg-[#15192b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 mt-1 space-y-4">
+<!-- Flow Header -->
+<div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/50 pb-3">
+<div class="flex items-center gap-2">
+<span class="material-icons text-slate-400 text-sm">bolt</span>
+<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Flow Draft</span>
+</div>
+<span class="text-xs text-primary font-medium">High Confidence</span>
+</div>
+<!-- Flow Blocks Preview -->
+<div class="space-y-3 relative">
+<!-- Connector Line -->
+<div class="absolute left-[19px] top-4 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-700 -z-10"></div>
+<!-- Trigger Block -->
+<div class="flex items-center gap-3 group">
+<div class="w-10 h-10 rounded-lg bg-trigger/10 border border-trigger/20 flex items-center justify-center flex-none group-hover:bg-trigger/20 transition-colors">
+<span class="material-icons text-trigger text-lg">location_on</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">Leave Work</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">Geofence Trigger • Location</p>
+</div>
+<div class="px-2 py-1 rounded bg-trigger/10 text-[10px] font-medium text-trigger tracking-wide uppercase">Trigger</div>
+</div>
+<!-- Action Block 1 -->
+<div class="flex items-center gap-3 group">
+<div class="w-10 h-10 rounded-lg bg-action/10 border border-action/20 flex items-center justify-center flex-none group-hover:bg-action/20 transition-colors">
+<span class="material-icons text-action text-lg">sms</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">SMS Partner</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">Send Message • Contacts</p>
+</div>
+<div class="px-2 py-1 rounded bg-action/10 text-[10px] font-medium text-action tracking-wide uppercase">Action</div>
+</div>
+<!-- Action Block 2 -->
+<div class="flex items-center gap-3 group">
+<div class="w-10 h-10 rounded-lg bg-action/10 border border-action/20 flex items-center justify-center flex-none group-hover:bg-action/20 transition-colors">
+<span class="material-icons text-action text-lg">ac_unit</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">Set AC to 72°F</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">Smart Home • Climate</p>
+</div>
+<div class="px-2 py-1 rounded bg-action/10 text-[10px] font-medium text-action tracking-wide uppercase">Action</div>
+</div>
+</div>
+<!-- Generate Button -->
+<button class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-glow group mt-2">
+<span class="material-icons text-lg group-hover:animate-pulse">auto_fix_high</span>
+                        Generate Flow
+                    </button>
+<div class="text-center">
+<button class="text-xs text-slate-500 hover:text-slate-300 underline decoration-slate-600 underline-offset-2">Edit parameters manually</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Input Area -->
+<footer class="fixed bottom-0 left-0 right-0 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800/50 pb-6 pt-2 z-20">
+<!-- Suggestion Pills -->
+<div class="overflow-x-auto hide-scrollbar pb-3 px-4 flex gap-2 w-full mask-gradient-right">
+<button class="flex-none px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors whitespace-nowrap">
+                🔋 Battery Saver Mode
+            </button>
+<button class="flex-none px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors whitespace-nowrap">
+                🌅 Morning Briefing
+            </button>
+<button class="flex-none px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors whitespace-nowrap">
+                📸 Save Photos to Drive
+            </button>
+<button class="flex-none px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors whitespace-nowrap">
+                🎵 Gym Playlist
+            </button>
+</div>
+<!-- Input Field Container -->
+<div class="px-4 flex items-end gap-2">
+<div class="flex-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center p-1 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary transition-all shadow-sm">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors rounded-xl">
+<span class="material-icons">add_circle_outline</span>
+</button>
+<textarea class="w-full bg-transparent border-none text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-0 resize-none py-3 text-sm max-h-24" placeholder="Describe your automation..." rows="1"></textarea>
+<button class="p-2 text-slate-400 hover:text-white hover:bg-primary/20 transition-colors rounded-xl">
+<span class="material-icons">mic</span>
+</button>
+</div>
+<button class="flex-none w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-glow hover:bg-primary-dark transition-colors active:scale-95">
+<span class="material-icons text-xl -mr-1 rotate-[-30deg]">send</span>
+</button>
+</div>
+<!-- Home Indicator Area (Simulated for iOS) -->
+<div class="h-1 w-1/3 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-4"></div>
+</footer>
+<!-- Blur Background Elements for Modern Feel -->
+<div class="fixed top-20 left-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+<div class="fixed bottom-32 right-0 w-64 h-64 bg-trigger/5 rounded-full blur-[80px] pointer-events-none -z-10"></div>
+</body></html>
