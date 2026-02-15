@@ -36,6 +36,22 @@ class AgentViewModel(
     private val _uiState = MutableStateFlow(AgentUiState())
     val uiState: StateFlow<AgentUiState> = _uiState
 
+    init {
+        viewModelScope.launch {
+            repository.observeFlows().collect { flowsWithState ->
+                val persistedGraphs = flowsWithState.associate { it.first.id to it.first }
+                val activeIds = flowsWithState.filter { it.second }.map { it.first.id }.toSet()
+                
+                // Merge persisted flows with existing in-memory drafts (if any)
+                // Valid persistence should override drafts
+                _uiState.value = _uiState.value.copy(
+                    flowGraphs = _uiState.value.flowGraphs + persistedGraphs,
+                    activeFlowIds = activeIds
+                )
+            }
+        }
+    }
+
     fun sendMessage(text: String) {
         if (text.isBlank()) return
 
@@ -62,6 +78,8 @@ class AgentViewModel(
                     flowId = graph.id
                 )
                 
+                // Store draft graph in memory so Chat can see it immediately
+                // It won't be in observeFlows yet because we filter isDraft=true
                 _uiState.value = _uiState.value.copy(
                     messages = _uiState.value.messages + agentMessage,
                     flowGraphs = _uiState.value.flowGraphs + (graph.id to graph),
@@ -104,26 +122,22 @@ class AgentViewModel(
     }
 
     fun activateFlow(flowId: String) {
-        // Mark flow as active
-        _uiState.value = _uiState.value.copy(
-            activeFlowIds = _uiState.value.activeFlowIds + flowId
-        )
-
-        // Check if it's a Manual Trigger flow and execute immediately
-        val flow = _uiState.value.flowGraphs[flowId]
-        if (flow != null && flow.blocks.any { it.type == com.devfest.runtime.model.BlockType.MANUAL_QUICK_TRIGGER }) {
-            runFlow(flow)
+        viewModelScope.launch {
+            repository.setActive(flowId, true)
+            // State update will happen via observeFlows if we map it correctly
+            
+            // Check if it's a Manual Trigger flow and execute immediately
+             val flow = _uiState.value.flowGraphs[flowId]
+             if (flow != null && flow.blocks.any { it.type == com.devfest.runtime.model.BlockType.MANUAL_QUICK_TRIGGER }) {
+                 runFlow(flow)
+             }
         }
     }
 
     fun toggleFlow(flowId: String, active: Boolean) {
-        val currentActive = _uiState.value.activeFlowIds
-        val newActive = if (active) {
-            currentActive + flowId
-        } else {
-            currentActive - flowId
+        viewModelScope.launch {
+            repository.setActive(flowId, active)
         }
-        _uiState.value = _uiState.value.copy(activeFlowIds = newActive)
     }
 
     private fun demoMetadata(): Map<String, String> {

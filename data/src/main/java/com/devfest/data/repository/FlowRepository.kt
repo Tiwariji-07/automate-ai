@@ -15,7 +15,8 @@ import kotlinx.serialization.json.Json
 interface FlowRepository {
     suspend fun requestFlow(intentText: String, context: IntentContext, sessionToken: String): FlowGraph
     suspend fun getFlow(id: String): FlowGraph?
-    fun observeFlows(): Flow<List<FlowGraph>>
+    fun observeFlows(): Flow<List<Pair<FlowGraph, Boolean>>>
+    suspend fun setActive(id: String, active: Boolean)
 }
 
 class DefaultFlowRepository(
@@ -31,20 +32,29 @@ class DefaultFlowRepository(
     ): FlowGraph {
         val response = agentClient.resolveIntent(intentText, context, sessionToken)
         persist(response)
-        return response.graph
+        // Return graph with the CORRECT ID (Entity ID), matching what observeFlows returns
+        return response.graph.copy(id = response.flowId)
     }
 
     override suspend fun getFlow(id: String): FlowGraph? =
         flowDao.getById(id)?.let { entity ->
-            json.decodeFromString(FlowGraph.serializer(), entity.graphJson)
+            json.decodeFromString(FlowGraph.serializer(), entity.graphJson).copy(id = entity.id)
         }
 
-    override fun observeFlows(): Flow<List<FlowGraph>> =
+    override fun observeFlows(): Flow<List<Pair<FlowGraph, Boolean>>> =
         flowDao.observeAll().map { entities ->
-            entities.map { entity ->
-                json.decodeFromString(FlowGraph.serializer(), entity.graphJson)
-            }
+            entities.filter { !it.isDraft } // ONLY show non-draft flows in global list (Dashboard)
+                .map { entity ->
+                    val graph = json.decodeFromString(FlowGraph.serializer(), entity.graphJson)
+                    // Force ID consistency: The DB ID is the source of truth
+                    graph.copy(id = entity.id) to entity.isActive
+                }
         }
+
+    override suspend fun setActive(id: String, active: Boolean) {
+        // When setting active, we also implicitly publish (remove draft status)
+        flowDao.updateStatus(id, active, isDraft = false)
+    }
 
     private suspend fun persist(response: FlowGraphResponse) {
         val entity = FlowEntity(
@@ -52,7 +62,9 @@ class DefaultFlowRepository(
             title = response.graph.title,
             graphJson = json.encodeToString(FlowGraph.serializer(), response.graph),
             explanation = response.explanation,
-            riskFlags = response.riskFlags.joinToString(separator = ",")
+            riskFlags = response.riskFlags.joinToString(separator = ","),
+            isActive = false,
+            isDraft = true // Default to draft
         )
         flowDao.upsert(entity)
     }

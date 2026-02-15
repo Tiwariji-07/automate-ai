@@ -36,10 +36,6 @@ fun FlowGraphView(
     nodeHeight: Dp = 60.dp
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
-    val tertiaryColor = MaterialTheme.colorScheme.tertiary
-    val errorColor = MaterialTheme.colorScheme.error
     
     // Calculate layout
     val layout = remember(graph) {
@@ -197,17 +193,24 @@ private fun calculateLayout(graph: FlowGraph): GraphLayout {
     graph.blocks.forEach { ranks[it.id] = 0 }
 
     // Multi-pass rank adjustment
-    for (i in 0 until graph.blocks.size) { // Relax edges N times
-        var changed = false
-        graph.edges.forEach { edge ->
-            val fromRank = ranks[edge.from] ?: 0
-            val toRank = ranks[edge.to] ?: 0
-            if (fromRank >= toRank) {
-                ranks[edge.to] = fromRank + 1
-                changed = true
-            }
+    if (graph.edges.isEmpty() && graph.blocks.size > 1) {
+        // Fallback: Linear layout if no edges defined but multiple blocks exist
+        graph.blocks.forEachIndexed { index, block ->
+            ranks[block.id] = index
         }
-        if (!changed) break
+    } else {
+        for (i in 0 until graph.blocks.size) { // Relax edges N times
+            var changed = false
+            graph.edges.forEach { edge ->
+                val fromRank = ranks[edge.from] ?: 0
+                val toRank = ranks[edge.to] ?: 0
+                if (fromRank >= toRank) {
+                    ranks[edge.to] = fromRank + 1
+                    changed = true
+                }
+            }
+            if (!changed) break
+        }
     }
     
     // Group by rank to assign X

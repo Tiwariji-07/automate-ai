@@ -17,4 +17,7 @@ interface FlowDao {
 
     @Query("SELECT * FROM flows ORDER BY title")
     fun observeAll(): Flow<List<FlowEntity>>
+
+    @Query("UPDATE flows SET is_active = :isActive, is_draft = :isDraft WHERE id = :id")
+    suspend fun updateStatus(id: String, isActive: Boolean, isDraft: Boolean)
 }

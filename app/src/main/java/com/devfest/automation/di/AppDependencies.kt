@@ -11,7 +11,16 @@ import kotlinx.serialization.json.Json
 
 object AppDependencies {
 
+    @Volatile
+    private var repository: FlowRepository? = null
+
     fun provideFlowRepository(context: Context): FlowRepository {
+        return repository ?: synchronized(this) {
+             repository ?: createRepository(context).also { repository = it }
+        }
+    }
+
+    private fun createRepository(context: Context): FlowRepository {
         val json = Json {
             ignoreUnknownKeys = true
             prettyPrint = false
