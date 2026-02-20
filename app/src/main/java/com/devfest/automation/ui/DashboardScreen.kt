@@ -159,7 +159,7 @@ private fun DashboardHeader() {
                 )
             }
 
-            // Branded avatar
+            // App icon
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -171,11 +171,10 @@ private fun DashboardHeader() {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Outlined.Bolt,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.devfest.automation.R.drawable.ic_launcher_foreground),
+                    contentDescription = "App Icon",
+                    modifier = Modifier.size(36.dp)
                 )
             }
         }
