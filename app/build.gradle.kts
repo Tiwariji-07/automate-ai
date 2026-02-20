@@ -70,6 +70,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.navigation:navigation-compose:2.7.6")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("com.google.android.material:material:1.11.0")

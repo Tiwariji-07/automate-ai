@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.devfest.automation.ui.theme.AgentTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 class MainActivity : ComponentActivity() {
     
@@ -22,6 +23,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install splash screen (must be BEFORE super.onCreate)
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         
         // Request permissions on launch for demo functionality

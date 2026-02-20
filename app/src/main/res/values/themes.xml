@@ -1,5 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base theme used after splash completes -->
     <style name="Theme.AIAutomation" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Splash Screen theme (shown on cold start) -->
+    <style name="Theme.AIAutomation.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <item name="postSplashScreenTheme">@style/Theme.AIAutomation</item>
     </style>
 </resources>
