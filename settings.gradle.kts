@@ -7,19 +7,13 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
     }
 }
 
-rootProject.name = "ai-automation-prototype"
+rootProject.name = "automate-ai"
 
-include(
-    ":app",
-    ":runtime",
-    ":agent-client",
-    ":data",
-    ":server"
-)
+include(":app", ":core")
