@@ -123,7 +123,7 @@ fun FlowScreen(flowId: String, onBack: () -> Unit, onEdit: () -> Unit, onReview:
                 }
                 else -> {
                     AppButton("Test run", { selectedRunId = null; app.runner.run(flowId, "Test run", test = true) }, Modifier.weight(1f), kind = ButtonKind.QUIET)
-                    AppButton("Run now", { selectedRunId = null; app.runner.run(flowId, "Run button") }, Modifier.weight(1f))
+                    AppButton("Run now", { selectedRunId = null; app.runner.run(flowId, "Run button", manual = true) }, Modifier.weight(1f))
                 }
             }
         }
