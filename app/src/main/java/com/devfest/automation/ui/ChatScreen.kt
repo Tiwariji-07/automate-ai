@@ -1,5 +1,6 @@
 package com.devfest.automation.ui
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -94,6 +95,8 @@ class ChatViewModel(private val app: AutomateApp, startId: String?, saved: Saved
                 val places = app.store.places().map { it.name }
                 val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd HH:mm"))
                 val result = app.agent.respond(app.store.chat(id), current, places, now)
+                Log.i(TAG, "agent reply: flow=${result.flow != null} repaired=${result.repaired} attempts=" +
+                    result.attempts.joinToString { "${it.durationMs}ms ${it.problem ?: "ok"}" })
 
                 val reply = buildString {
                     append(result.message.ifBlank { if (result.flow != null) "Here is the flow." else "I could not build that." })
@@ -138,6 +141,7 @@ class ChatViewModel(private val app: AutomateApp, startId: String?, saved: Saved
     }
 
     private companion object {
+        const val TAG = "ChatViewModel"
         const val KEY_FLOW = "flow"
     }
 }

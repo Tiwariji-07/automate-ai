@@ -29,12 +29,20 @@ data class AgentResult(
     val flow: Automation?,
     /** Problems left after the repair attempt. Empty when [flow] is set. */
     val errors: List<Issue> = emptyList(),
-    val warnings: List<Issue> = emptyList()
-)
+    val warnings: List<Issue> = emptyList(),
+    /** One entry per model call, in order. Two entries mean the first reply needed a repair. */
+    val attempts: List<AgentAttempt> = emptyList()
+) {
+    val repaired: Boolean get() = attempts.size > 1 && flow != null
+}
+
+/** One model call: how long it took and why its reply was not used, if it was not. */
+data class AgentAttempt(val durationMs: Long, val problem: String? = null)
 
 class FlowAgent(
     private val model: ChatModel,
-    private val json: Json = DefaultJson
+    private val json: Json = DefaultJson,
+    private val nanoTime: () -> Long = System::nanoTime
 ) {
 
     /**
@@ -54,10 +62,12 @@ class FlowAgent(
         }
         val validator = FlowValidator(places.toSet())
 
-        val first = model.complete(messages, json = true)
+        val (first, firstMs) = timed { model.complete(messages, json = true) }
         val parsed = parse(first)
         val result = parsed?.flow?.let(validator::validate)
-        if (parsed != null && (result == null || result.isValid)) return toResult(parsed, result)
+        if (parsed != null && (result == null || result.isValid)) {
+            return toResult(parsed, result, listOf(AgentAttempt(firstMs)))
+        }
 
         val problem = if (parsed == null) {
             "Your reply was not valid JSON in the required shape. Reply again with only the JSON object."
@@ -65,19 +75,34 @@ class FlowAgent(
             "The flow has these problems:\n" + result!!.errors.joinToString("\n") { "- $it" } +
                 "\nFix them and reply again with the full JSON object."
         }
-        val retry = model.complete(
-            messages + ChatMessage(ChatMessage.Role.ASSISTANT, first) + ChatMessage(ChatMessage.Role.USER, problem),
-            json = true
-        )
+        val firstAttempt = AgentAttempt(firstMs, if (parsed == null) "invalid JSON" else "${result!!.errors.size} validation errors")
+        val (retry, retryMs) = timed {
+            model.complete(
+                messages + ChatMessage(ChatMessage.Role.ASSISTANT, first) + ChatMessage(ChatMessage.Role.USER, problem),
+                json = true
+            )
+        }
         val reparsed = parse(retry)
-            ?: return AgentResult("The model's reply could not be read. Try rephrasing.", null)
-        return toResult(reparsed, reparsed.flow?.let(validator::validate))
+            ?: return AgentResult(
+                "The model's reply could not be read. Try rephrasing.",
+                null,
+                attempts = listOf(firstAttempt, AgentAttempt(retryMs, "invalid JSON"))
+            )
+        val revalidated = reparsed.flow?.let(validator::validate)
+        val retryProblem = revalidated?.takeUnless { it.isValid }?.let { "${it.errors.size} validation errors" }
+        return toResult(reparsed, revalidated, listOf(firstAttempt, AgentAttempt(retryMs, retryProblem)))
     }
 
-    private fun toResult(reply: AgentReply, validation: ValidationResult?): AgentResult = when {
-        validation == null -> AgentResult(reply.message, null)
-        validation.isValid -> AgentResult(reply.message, validation.flow, warnings = validation.warnings)
-        else -> AgentResult(reply.message, null, validation.errors, validation.warnings)
+    private inline fun <T> timed(block: () -> T): Pair<T, Long> {
+        val start = nanoTime()
+        val value = block()
+        return value to (nanoTime() - start) / 1_000_000
+    }
+
+    private fun toResult(reply: AgentReply, validation: ValidationResult?, attempts: List<AgentAttempt>): AgentResult = when {
+        validation == null -> AgentResult(reply.message, null, attempts = attempts)
+        validation.isValid -> AgentResult(reply.message, validation.flow, warnings = validation.warnings, attempts = attempts)
+        else -> AgentResult(reply.message, null, validation.errors, validation.warnings, attempts)
     }
 
     /** Null when the reply is neither `{"message", "flow"}` nor a bare flow object. */
