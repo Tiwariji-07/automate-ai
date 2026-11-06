@@ -38,7 +38,7 @@ class FlowRunner(private val context: Context) {
                     KEY_FLOW to flowId,
                     KEY_SOURCE to source,
                     KEY_TEST to test,
-                    KEY_OUTPUTS to json.encodeToString(outputsSerializer, triggerOutputs.mapValues { it.value.take(MAX_OUTPUT) })
+                    KEY_OUTPUTS to encodeOutputs(triggerOutputs)
                 )
             )
             .addTag(TAG)
@@ -56,12 +56,45 @@ class FlowRunner(private val context: Context) {
         private const val KEY_SOURCE = "source"
         private const val KEY_OUTPUTS = "outputs"
         private const val KEY_TEST = "test"
-        /** WorkManager input is capped at 10 KB. */
         private const val MAX_OUTPUT = 2000
+        /**
+         * WorkManager input is capped at 10 KB and stores strings as modified UTF-8, where each Hindi
+         * letter takes 3 bytes. This budget leaves room for the flow id and the source.
+         */
+        internal const val MAX_OUTPUT_BYTES = 8 * 1024
         private val json = Json
         private val outputsSerializer = MapSerializer(String.serializer(), String.serializer())
 
         private fun workName(flowId: String) = "run-$flowId"
+
+        /**
+         * Trigger outputs as JSON that fits in [maxBytes]. Each value is cut to [MAX_OUTPUT] characters,
+         * then shorter until the whole map fits, so a long SMS in Hindi cannot crash the trigger.
+         */
+        internal fun encodeOutputs(outputs: Map<String, String>, maxBytes: Int = MAX_OUTPUT_BYTES): String {
+            var limit = MAX_OUTPUT
+            while (true) {
+                val text = json.encodeToString(outputsSerializer, outputs.mapValues { it.value.cut(limit) })
+                if (modifiedUtf8Length(text) <= maxBytes || limit == 0) return text
+                limit /= 2
+            }
+        }
+
+        /** Does not split a surrogate pair, which would turn an emoji into a broken character. */
+        private fun String.cut(limit: Int): String {
+            if (length <= limit) return this
+            val end = if (limit > 0 && this[limit - 1].isHighSurrogate()) limit - 1 else limit
+            return substring(0, end)
+        }
+
+        /** Byte length as [java.io.DataOutputStream.writeUTF] writes it. */
+        internal fun modifiedUtf8Length(text: String): Int = text.sumOf { c ->
+            when (c.code) {
+                in 0x01..0x7F -> 1
+                0, in 0x80..0x7FF -> 2
+                else -> 3
+            }
+        }
 
         internal fun isTest(data: Data): Boolean = data.getBoolean(KEY_TEST, false)
 
