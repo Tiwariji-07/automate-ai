@@ -69,9 +69,14 @@ class OpenAiChatModel(
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) = cont.resumeWithException(e)
                 override fun onResponse(call: Call, response: Response) {
-                    val result = response.use {
-                        val text = it.body.string()
-                        if (it.isSuccessful) Result.success(text) else Result.failure(AiException(errorMessage(it.code, text)))
+                    // Reading the body can throw if the connection drops. OkHttp does not call onFailure
+                    // then, so without this catch the chat stays on "Thinking" for ever.
+                    val result = runCatching {
+                        response.use {
+                            val text = it.body.string()
+                            if (!it.isSuccessful) throw AiException(errorMessage(it.code, text))
+                            text
+                        }
                     }
                     result.fold(cont::resume, cont::resumeWithException)
                 }
