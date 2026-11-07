@@ -32,6 +32,11 @@ class TriggerRulesTest {
         assertTrue(TriggerRules.sms(mapOf("from" to "HDFC"), "VM-HDFCBK", "x"))
         assertFalse(TriggerRules.sms(mapOf("contains" to "OTP"), "x", "hello"))
         assertTrue(TriggerRules.sms(emptyMap(), "x", "anything"))
+        assertFalse(TriggerRules.sms(mapOf("from" to "+4930123456"), "+49301234567", "x"))
+        assertFalse(TriggerRules.sms(mapOf("from" to "98765 43210"), "+91 98765 432109", "x"))
+        assertTrue(TriggerRules.sms(mapOf("from" to "56767"), "56767", "x"))
+        assertFalse(TriggerRules.sms(mapOf("from" to "56767"), "567670", "x"))
+        assertTrue(TriggerRules.sms(mapOf("from" to "212.555.0123"), "+12125550123", "x"))
     }
 
     @Test

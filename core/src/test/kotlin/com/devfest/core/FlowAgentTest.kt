@@ -90,4 +90,33 @@ class FlowAgentTest {
         val prompt = AgentPrompt.system()
         Blocks.all.forEach { assertTrue("- ${it.type}:" in prompt, it.type) }
     }
+
+    @Test
+    fun `the trace shows one clean attempt`() = runTest {
+        val model = ScriptedModel("""{"message": "ok", "flow": {"title": "Buzz", "trigger": {"type": "manual"}, "steps": [{"type": "vibrate"}]}}""")
+        val result = FlowAgent(model).respond(user, null, emptyList(), "09:00")
+        assertEquals(1, result.attempts.size)
+        assertNull(result.attempts.single().problem)
+        assertEquals(false, result.repaired)
+    }
+
+    @Test
+    fun `the trace records why the first reply was repaired`() = runTest {
+        var tick = 0L
+        val model = ScriptedModel(
+            """{"message": "ok", "flow": {"title": "Buzz", "trigger": {"type": "manual"}, "steps": [{"type": "buzz"}]}}""",
+            """{"message": "fixed", "flow": {"title": "Buzz", "trigger": {"type": "manual"}, "steps": [{"type": "vibrate"}]}}"""
+        )
+        val result = FlowAgent(model, nanoTime = { tick += 5_000_000; tick }).respond(user, null, emptyList(), "09:00")
+        assertEquals(listOf("1 validation errors", null), result.attempts.map { it.problem })
+        assertEquals(listOf(5L, 5L), result.attempts.map { it.durationMs })
+        assertTrue(result.repaired)
+    }
+
+    @Test
+    fun `the trace marks a failed repair`() = runTest {
+        val result = FlowAgent(ScriptedModel("{not json", "still not json")).respond(user, null, emptyList(), "09:00")
+        assertEquals(listOf("invalid JSON", "invalid JSON"), result.attempts.map { it.problem })
+        assertEquals(false, result.repaired)
+    }
 }

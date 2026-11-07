@@ -3,6 +3,7 @@ package com.devfest.core.catalog
 import java.net.URI
 import java.time.DayOfWeek
 import java.time.LocalTime
+import java.util.Locale
 
 /** Parses and normalizes param values. Each function returns null when the value is invalid. */
 object Values {
@@ -23,7 +24,8 @@ object Values {
         return LocalTime.of(hour, minute)
     }
 
-    fun formatTime(time: LocalTime): String = "%02d:%02d".format(time.hour, time.minute)
+    /** Always ASCII digits: the default locale may be Arabic or Hindi, and [time] must read the value back. */
+    fun formatTime(time: LocalTime): String = String.format(Locale.ROOT, "%02d:%02d", time.hour, time.minute)
 
     private val dayNames = mapOf(
         "mon" to DayOfWeek.MONDAY, "tue" to DayOfWeek.TUESDAY, "wed" to DayOfWeek.WEDNESDAY,

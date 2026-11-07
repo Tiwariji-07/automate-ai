@@ -119,7 +119,7 @@ class HomeViewModel(private val app: AutomateApp) : ViewModel() {
 
     fun refresh() { tick.value++ }
 
-    fun run(id: String) = app.runner.run(id, "Run button")
+    fun run(id: String) = app.runner.run(id, "Run button", manual = true)
 
     /** Calls [needsReview] when the flow is missing permissions, so the caller opens the review screen. */
     fun setEnabled(id: String, on: Boolean, needsReview: () -> Unit) = viewModelScope.launch {

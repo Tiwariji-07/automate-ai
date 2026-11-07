@@ -20,7 +20,7 @@ object TriggerRules {
 
     fun sms(params: Map<String, String>, from: String, body: String): Boolean {
         val wantFrom = params["from"].orEmpty()
-        val fromOk = wantFrom.isEmpty() || samePhone(wantFrom, from) || from.contains(wantFrom, ignoreCase = true)
+        val fromOk = wantFrom.isEmpty() || senderMatches(wantFrom, from)
         val wantText = params["contains"].orEmpty()
         return fromOk && (wantText.isEmpty() || body.contains(wantText, ignoreCase = true))
     }
@@ -58,6 +58,17 @@ object TriggerRules {
             }
             return false
         }
+    }
+
+    /**
+     * A number is compared as a number, so "+4930123456" does not match "+49301234567". A sender name such as
+     * "HDFC" matches any sender that contains it, for example "VM-HDFCBK".
+     */
+    private fun senderMatches(want: String, from: String): Boolean {
+        // No letters means a number, in any spelling: "+91 98765 43210", "212.555.0123".
+        val digits = want.filter(Char::isDigit)
+        if (digits.isEmpty() || want.any(Char::isLetter)) return from.contains(want, ignoreCase = true)
+        return if (digits.length >= 6) samePhone(want, from) else from.filter(Char::isDigit) == digits
     }
 
     /** Compares phone numbers by their last 10 digits so "+91 98765 43210" matches "9876543210". */
